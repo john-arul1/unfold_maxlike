@@ -1,0 +1,10 @@
+\begin{table}[h]
+\centering
+\caption{ }
+\label{tab:my-table}
+\begin{tabular}{|c|c|}
+\hline 
+1&2.0E3\\ \hline 
+3&4.33\\ \hline 
+\end{tabular}
+\end{table}

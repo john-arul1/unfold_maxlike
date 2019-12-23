@@ -1,0 +1,485 @@
+%\documentclass[12pt,a4paper]{article}
+\documentclass[review]{elsarticle}
+%\documentclass[titlepage]{article}
+
+%\usepackage{physics}
+\usepackage{commath}
+\usepackage{amsmath}
+\usepackage{lscape}
+\usepackage{longtable}
+%\usepackage{titling}
+%\usepackage{blindtext}
+\usepackage{graphicx}
+\usepackage{subcaption}
+
+
+
+\title{Non-negative spectrum unfolding with nearest theoretical distance and maximum Likelihood cost functions}
+\author{A. John Arul}
+
+\address{Reactor Shielding and Data Division, Nuclear Systems Design Group, Indira Gandhi Center for Atomic Research, Kalpakkam, India}
+
+\begin{document}
+\begin{titlepage}
+\maketitle
+
+\vspace{50mm}
+\begin{abstract}
+A method for spectrum prediction based on nearest distance to theoretical calculation and maximum likelihood of the measurement data is presented.  The method is demonstrated for application to experimental determination of neutron spectrum given a limited set of measurements and prior theoretical estimated spectrum. In this method the solution vector is required to satisfy the requirements that it is non-negative, maximizes the likelihood of the experimental observation and minimizes the distance to theoretical estimate. The smoothness requirement is imposed by requiring that the solution is close to the singular value decomposition based estimate.  Case studies are presented to substantiate validity of the algorithm. 
+\end{abstract}
+
+%\begin{alignleft}
+\end{titlepage} 
+
+
+\maketitle 
+
+\section{Introduction}
+
+The study pertains to the determination of the neutron flux as a function of neutron energy from a set of measurements which are usually much less than that required for exact solution of the problem.  That is the number of groups of neutrons to be estimated are much greater than the practically possible set of measurements. The limited set of measurement would result in an under determined system of equations with infinity of solutions. Various approaches have been taken in the literature to solve the problem\cite{}. One simple approach is to use Tikhonov's regularization methods\cite{Tikhonov}. With Tikhonov's  regularization though the inverted results are robust, i.e., free from wild fluctuations, the values could be un-physically negative at some places. In case one requires that the measurement equations be satisfied exactly along with the positivity constraint,  there may not be a feasible solution. Even when the above requirements are met, the unfolded spectrum often is not smooth. To include a smoothness criteria, some authors have used a maximum entropy criteria\cite{Iguchi}. However, the maximum entropy criteria can make the flux spectrum unnecessarily flat unless it is weighted properly. Further there basis for maximum entropy which is absence of information about the function to be solved cannot be always justified. For instance in the neutron spectrum unfolding problem there is information about the spectrum available in the form of calculations. Further, the weight used for the entropy function becomes an arbitrary parameter, which also needs to be optimized. To over the above difficulties we propose a method which depends only on the measurement and calculated function.  Any smoothness requirement can be based on closeness to a regularized solution to the inversion problem or from a SVD solution to the inversion problem.  
+
+
+\section{Theoretical models}
+
+The characteristics of the solution to the inverse problem essentially depend on the cost function. There are many standard solvers for the constrained optimization which could be used for the solution. The details of a solver only determine the efficiency and convenience of implementation. Therefore we focus on the determination of useful cost functions for the inverse problem.  In this study we propose a cost function that is a combination of  i) Poisson likely hood function ii) distance to the theoretical estimate iii) distance to the SVD solution. Besides the solution needs to satisfy the normalization condition and non-negativity constraint. 
+More formally the problem is presented as below. Let us consider the spectrum unfolding problem, where a set of 'm' measurement points are available as a vector $B$ from a detector exposed to an unknown neutron flux spectrum $\phi_i=\phi(E_i)$ where $i$ is energy group index $i=1 ... n$  and $m << n$.
+ 
+If the detector response function could be represented by a linear operator $A$ then one can write,
+\begin{equation}
+\label{AphiB}
+A \phi=B
+\end{equation}
+Let us normalize the above equation by dividing by $\alpha =\sum_i\phi_i$ on both sides, i.e., that is with $x=\phi/\alpha $ and $b=B/\alpha$.
+\begin{equation}
+\label{AphiB}
+A x=b
+\end{equation}
+
+
+The function to be minimized $L$ is written as, 
+
+$$
+L(x,x_0,x_t)= P(x,b)+D(x,x_t)
+$$
+
+where P is the Poisson likelihood function, D and S are distance functions defined as follows,
+
+$$
+\label{Poisson}
+P(x,b)=(-c) +b ln (c)  
+$$
+
+with $ c= R*x$.
+
+$$
+D(x,x_t) = (x-x_t)^T*(x-x_t)
+$$
+
+In addition one may add an entropy function to $L$ as below 
+$$
+S(x)=\sum_i x_i ln x_i 
+$$
+
+or a regularization function to $L$,
+$$
+S(x,x_0) = \lambda (x-x_0)^T*(x-x_0)
+$$
+
+The constraints to be satisfied are, $
+\sum_i x_i = 1.0  \hspace{5mm} \text{and} \hspace{5mm} x_i \ge 0 $.
+
+\subsection{Singular Value Decomposition}
+
+If the length of the flux spectrum vector is $n$ and if $m<< n$ as often is the case, there is no unique solution to the above equation.
+For an under determined problem of this kind, a robust solution can be obtained from the pseudo inverse using SVD.
+The SVD for $A$ is
+
+\begin{equation}
+A=U\Sigma V^T
+\end{equation}
+
+A particular solution to $Ax=b$ is obtained as,
+
+\[  x_0 = A^+  b\]
+where $A^+$ is the pseudoinverse,
+
+\[  A^+  = V\Sigma^{-1} U^T\]
+ 
+ The svd solution is used here for comparison purposes and could also be used as a initial point for iterative algorithms. 
+ 
+ 
+ \section{Optimization}
+ 
+ As mentioned before, the specific minimization algorithm does not determine the characteristics of the solution such as non-negativity and smoothness. If the proper cost functions chosen, one can use any optimization procedure from a variety procedures available in the literature. 
+ Here the minimization is carried out using python scipy  minimize function with SLSQP algorithm\cite{slsqp}.
+ 
+ \textit{minimize}(L, x0=\textit{initial guess}, args=\textit{list of arguments}, method=\textit{'SLSQP'}, bounds=\textit{lower bounds}, constraints=\textit{normalization}, options=\textit{opt})
+
+ 
+ The algorithm does not require a specific starting point and in the experiments solution is independent of the starting point. The theoretical estimate or the SVD solution can serve as a starting point.
+
+\section{Numerical examples}
+
+The algorithm is tested with a mock up example from literature\cite{Iguchi} and experimental data from FBTR and Am-Be source. The measurements were performed with nested neutron spectrometer. The nested neutron spectrometer consists of  seven cylindrical polyethylene shells and a He-3 neutron detector.  Multiple counts are recorded after enclosing the bare He-3 detector successively with polyethylene shells.  The theoretical calculations from DORT transport code in case of FBTR data and standard $(\alpha, n)$ spectrum in the case of Am-Be source.   
+
+\subsection{Example from  literature}
+
+A test problem from ref.\cite{Iguchi} with five group neutron fluxes.
+
+\begin{table}[h!]
+	\centering
+	\caption{Response matrix for the five neutron group flux test problem\cite{Iguchi}}
+	\label{tab:ex1-resp}
+	\begin{tabular}{||l|l|l|l|l||}
+		\hline
+		Ri1&Ri2&Ri3&Ri4&Ri5\\ \hline
+		3&4&3&2&1 \\ \hline
+		0&2&3&3&0 \\ \hline
+		0&1&2&4&4 \\ \hline
+	\end{tabular}
+\end{table}	
+
+\begin{table}[h!]
+	\centering
+	\caption{Flux for the five neutron group flux test problem}
+	\label{tab:ex1-flux}
+	\begin{tabular}{|l|l|l|l|l|}
+		\hline
+		2.0&5.0&9.0&13.0&8.0 \\ \hline
+	\end{tabular}
+\end{table}	
+
+\begin{table}[h!]
+		\centering
+	\caption{Counts for the five neutron group flux test problem}
+	\label{tab:ex1-counts}
+	\begin{tabular}{|l|l|l|}
+		\hline
+		87.0&   76.0&  107.0 \\ \hline
+	\end{tabular}
+\end{table}	
+
+
+\begin{figure}[h!]
+	\centering
+\includegraphics[width=\linewidth]{unfold_Iguchi.png}
+\caption{Unfolded group flux for the 5 group flux example from \cite{Iguchi}}
+\label{fig:Iguchi}
+\end{figure}
+
+
+\subsection{Americium-Beryllium Source spectrum determination}
+
+
+\begin{table}[h]
+	\caption{ }
+	\label{tab:my-table}
+	\begin{tabular}{|l|l|}
+		\hline 
+		1.120e-09&4.360e-15\\ \hline 
+		1.590e-09&1.049e-14\\ \hline 
+		2.510e-09&2.109e-14\\ \hline 
+		3.980e-09&4.208e-14\\ \hline 
+		6.310e-09&8.391e-14\\ \hline 
+		1.000e-08&1.691e-13\\ \hline 
+		1.590e-08&3.317e-13\\ \hline 
+		2.510e-08&6.668e-13\\ \hline 
+		3.980e-08&1.331e-12\\ \hline 
+		6.310e-08&2.653e-12\\ \hline 
+		1.000e-07&5.346e-12\\ \hline 
+		1.590e-07&1.049e-11\\ \hline 
+		2.510e-07&2.109e-11\\ \hline 
+		3.980e-07&4.208e-11\\ \hline 
+		6.310e-07&8.391e-11\\ \hline 
+		1.000e-06&1.691e-10\\ \hline 
+		1.590e-06&3.317e-10\\ \hline 
+		2.510e-06&6.668e-10\\ \hline 
+		3.980e-06&1.331e-09\\ \hline 
+		6.310e-06&2.653e-09\\ \hline 
+		1.000e-05&5.346e-09\\ \hline 
+		1.590e-05&1.049e-08\\ \hline 
+		2.510e-05&2.108e-08\\ \hline 
+		3.980e-05&4.208e-08\\ \hline 
+		6.310e-05&8.390e-08\\ \hline 
+		1.000e-04&1.690e-07\\ \hline 
+		1.590e-04&3.317e-07\\ \hline 
+		2.510e-04&6.667e-07\\ \hline 
+		3.980e-04&1.330e-06\\ \hline 
+		6.310e-04&2.652e-06\\ \hline 
+		1.000e-03&5.343e-06\\ \hline 
+		1.590e-03&1.048e-05\\ \hline 
+		2.510e-03&2.105e-05\\ \hline 
+		3.980e-03&4.197e-05\\ \hline 
+		6.310e-03&8.356e-05\\ \hline 
+		1.000e-02&1.680e-04\\ \hline 
+		1.590e-02&3.283e-04\\ \hline 
+		2.510e-02&6.560e-04\\ \hline 
+		3.980e-02&1.481e+02\\ \hline 
+		6.310e-02&3.073e+02\\ \hline 
+		1.000e-01&6.098e+02\\ \hline 
+		1.590e-01&1.236e+03\\ \hline 
+		2.510e-01&3.338e+03\\ \hline 
+		3.980e-01&1.169e+04\\ \hline 
+		6.310e-01&3.351e+04\\ \hline 
+		1.000e+00&5.731e+04\\ \hline 
+		1.590e+00&1.780e+05\\ \hline 
+		2.510e+00&8.750e+05\\ \hline 
+		3.980e+00&1.211e+06\\ \hline 
+		6.310e+00&8.066e+05\\ \hline 
+		1.000e+01&4.697e+04\\ \hline 
+		1.590e+01&5.149e-06\\ \hline 
+	\end{tabular}
+\end{table}
+
+
+\begin{table}[h]
+	\caption{ counts}
+	\label{tab:my-table}
+	\begin{tabular}{|l|}
+		\hline 
+		4.48e+00\\ \hline 
+		1.61e+01\\ \hline 
+		2.40e+01\\ \hline 
+		3.22e+01\\ \hline 
+		4.91e+01\\ \hline 
+		6.09e+01\\ \hline 
+		7.29e+01\\ \hline 
+		6.86e+01\\ \hline 
+	\end{tabular}
+\end{table}
+
+
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}[b]{0.8\linewidth}
+		\includegraphics[width=\linewidth]{unfold_ambe2.png}
+		\caption{Group flux (n/$cm^2$/sec}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.8\linewidth}
+		\includegraphics[width=\linewidth]{error_ambe2.png}
+		\caption{Percent error in counts.}
+	\end{subfigure}
+	\caption{Unfolded Americium-Beryllium source spectrum}
+	\label{fig:ambe}
+\end{figure}
+
+
+
+\subsection{FBTR top shield spectrum determination}
+
+
+
+	
+
+\begin{longtable}[h!]{|l|c|}
+	\caption{FBTR top of pile flux}
+	\label{tab:fbtr-flux}\\
+    \endfirsthead
+    \multicolumn{2}{c}
+    {\tablename\ \thetable\ -- \textit{Continued from previous page}} \\
+    \hline
+    \endhead
+    \hline \multicolumn{2}{r}{\textit{Continued on next page}} \\
+    \endfoot
+    \hline
+    \endlastfoot
+    \hline 
+		Energy (eV) & DORT flux (n/cm2/s) \\ \hline 
+	1.59e+07&3.27e-08\\ \hline 
+	1.00e+07&3.95e-07\\ \hline 
+	6.31e+06&3.28e-06\\ \hline 
+	3.98e+06&1.70e-05\\ \hline 
+	2.51e+06&8.58e-05\\ \hline 
+	1.59e+06&5.14e-04\\ \hline 
+	1.00e+06&1.60e-03\\ \hline 
+	6.31e+05&4.02e-03\\ \hline 
+	3.98e+05&1.35e-02\\ \hline 
+	2.51e+05&1.70e-02\\ \hline 
+	1.59e+05&2.66e-02\\ \hline 
+	1.00e+05&3.58e-02\\ \hline 
+	6.31e+04&4.48e-02\\ \hline 
+	3.98e+04&2.86e-02\\ \hline 
+	2.51e+04&6.61e-02\\ \hline 
+	1.59e+04&3.15e-02\\ \hline 
+	1.00e+04&2.06e-02\\ \hline 
+	6.31e+03&1.94e-02\\ \hline 
+	3.98e+03&3.28e-02\\ \hline 
+	2.51e+03&4.80e-02\\ \hline 
+	1.59e+03&4.57e-02\\ \hline 
+	1.00e+03&3.82e-02\\ \hline 
+	6.31e+02&3.66e-02\\ \hline 
+	3.98e+02&3.85e-02\\ \hline 
+	2.51e+02&4.15e-02\\ \hline 
+	1.59e+02&3.94e-02\\ \hline 
+	1.00e+02&4.73e-02\\ \hline 
+	6.31e+01&4.27e-02\\ \hline 
+	3.98e+01&3.34e-02\\ \hline 
+	2.51e+01&3.57e-02\\ \hline 
+	1.59e+01&3.69e-02\\ \hline 
+	1.00e+01&3.62e-02\\ \hline 
+	6.31e+00&3.45e-02\\ \hline 
+	3.98e+00&3.07e-02\\ \hline 
+	2.51e+00&2.48e-02\\ \hline 
+	1.59e+00&1.88e-02\\ \hline 
+	1.00e+00&1.26e-02\\ \hline 
+	6.31e-01&7.39e-03\\ \hline 
+	3.98e-01&1.32e-03\\ \hline 
+	2.51e-01&8.26e-04\\ \hline 
+	1.59e-01&2.82e-03\\ \hline 
+	1.00e-01&2.82e-03\\ \hline 
+	6.31e-02&1.24e-03\\ \hline 
+	3.98e-02&7.83e-04\\ \hline 
+	2.51e-02&4.90e-04\\ \hline 
+	1.59e-02&3.14e-04\\ \hline 
+	1.00e-02&1.97e-04\\ \hline 
+	6.31e-03&1.24e-04\\ \hline 
+	3.98e-03&7.83e-05\\ \hline 
+	2.51e-03&4.90e-05\\ \hline 
+	1.59e-03&2.50e-05\\ \hline 
+	1.12e-03&0.00e+00\\ \hline 
+\end{longtable}
+
+
+\begin{table}[h!]
+		\centering
+		\label{tab:fbtr-cps}
+\caption{FBTR top of pile Nested Neutron Spectrometer measurement (cps)}
+\begin{tabular}{|c|p{1cm}|}
+\hline
+measurement no. & cps  \\ \hline
+1&	5.27\\  \hline
+2&	61.50\\   \hline
+3&	66.90\\   \hline
+4&	70.40\\  \hline
+5&	55.10\\  \hline
+6&	45.30\\  \hline
+7&	24.00\\  \hline
+8&	9.98 \\  \hline
+\end{tabular}
+\end{table}
+
+
+
+\begin{figure}[h!]
+	\centering
+	\begin{subfigure}[b]{0.8\linewidth}
+		\includegraphics[width=\linewidth]{unfold_fbtr2.png}
+		\caption{Group flux (n/$cm^2$/sec}
+	\end{subfigure}
+	\begin{subfigure}[b]{0.8\linewidth}
+		\includegraphics[width=\linewidth]{error_fbtr2.png}
+		\caption{Percent error in counts.}
+	\end{subfigure}
+	\caption{Unfolded FBTR top of pile spectrum}
+	\label{fig:fbtr}
+\end{figure}
+
+
+\section{Conclusion}
+
+A spectrum unfolding program has been developed for robust measurement of neutron spectrum. The method combines measurement data from foil activation or NNS and theoretical calculation.
+
+\hspace{20mm}
+
+
+\textbf{Acknowledgement:}The author thanks Mr. D. Venkatasubramanian and Dr. G. Pandikumar for sharing the spectrum measurement data. The author also thanks Dr. Sunil kumar for providing the DORT generated fluxes.
+
+
+\newpage
+\section{References}
+
+\begin{thebibliography}{widestlabel}
+\bibitem{Iguchi} 
+
+Maeda, Shigetaka, Hideki Tomita, Jun Kawarabayashi, and T. Iguchi. “Fundamental Study on Neutron Spectrum Unfolding Using Maximum Entropy and Maximum Likelihood Method.” Progress in Nuclear Science and Technology 1 (2011): 233–36. https://doi.org/10.15669/pnst.1.233.
+
+\bibitem{Nash}
+S.G. Nash and A. Sofer: Linear and nonlinear programming, McGraw-Hill, New York, 1996.
+
+
+
+\end{thebibliography}
+
+
+
+%\end{flushleft}
+\newpage
+\section{Appendix}
+The table \ref{tab:resp} gives the response matrix for the nested neutron spectrometer.
+
+\begin{longtable}{|p{1.6cm}|l|l|l|l|l|l|l|l|}
+	\caption{NNS Response Function Rij, (energy groups=52,measurements=8)}
+	\label{tab:resp}\\
+	\hline
+	Energy bin(MeV)& Ri1 &Ri2 &Ri3 &Ri4 &Ri5 &Ri6 &Ri7 &Ri8 \\ \hline
+	\endfirsthead
+	\multicolumn{9}{c}
+	{\tablename\ \thetable\ -- \textit{Continued from previous page}} \\
+	\hline
+	\endhead
+	\hline \multicolumn{9}{r}{\textit{Continued on next page}} \\
+	\endfoot
+	\hline
+	\endlastfoot
+	\hline 
+	1.59e-09&2.08e+00&2.16e-01&1.83e-01&1.53e-01&1.09e-01&7.40e-02&3.25e-02&1.35e-02\\ \hline 
+	2.51e-09&1.89e+00&2.28e-01&1.90e-01&1.62e-01&1.13e-01&7.84e-02&3.40e-02&1.40e-02\\ \hline 
+	3.98e-09&1.68e+00&2.43e-01&2.02e-01&1.72e-01&1.21e-01&8.24e-02&3.64e-02&1.49e-02\\ \hline 
+	6.31e-09&1.46e+00&2.65e-01&2.21e-01&1.87e-01&1.32e-01&8.93e-02&3.94e-02&1.62e-02\\ \hline 
+	1.00e-08&1.25e+00&2.95e-01&2.46e-01&2.08e-01&1.46e-01&1.00e-01&4.34e-02&1.81e-02\\ \hline 
+	1.59e-08&1.06e+00&3.29e-01&2.75e-01&2.31e-01&1.64e-01&1.10e-01&4.86e-02&2.05e-02\\ \hline 
+	2.51e-08&8.89e-01&3.65e-01&3.06e-01&2.58e-01&1.82e-01&1.23e-01&5.41e-02&2.26e-02\\ \hline 
+	3.98e-08&7.35e-01&4.10e-01&3.47e-01&2.93e-01&2.06e-01&1.40e-01&6.12e-02&2.57e-02\\ \hline 
+	6.31e-08&6.03e-01&4.76e-01&4.07e-01&3.47e-01&2.44e-01&1.64e-01&7.26e-02&3.02e-02\\ \hline 
+	1.00e-07&4.92e-01&5.69e-01&4.99e-01&4.29e-01&3.01e-01&2.04e-01&8.96e-02&3.71e-02\\ \hline 
+	1.59e-07&3.99e-01&6.58e-01&5.92e-01&5.11e-01&3.63e-01&2.47e-01&1.07e-01&4.46e-02\\ \hline 
+	2.51e-07&3.23e-01&7.26e-01&6.61e-01&5.81e-01&4.17e-01&2.84e-01&1.24e-01&5.13e-02\\ \hline 
+	3.98e-07&2.60e-01&7.82e-01&7.29e-01&6.50e-01&4.70e-01&3.22e-01&1.41e-01&5.84e-02\\ \hline 
+	6.31e-07&2.09e-01&8.27e-01&7.86e-01&7.07e-01&5.19e-01&3.55e-01&1.56e-01&6.47e-02\\ \hline 
+	1.00e-06&1.67e-01&8.59e-01&8.30e-01&7.57e-01&5.64e-01&3.85e-01&1.71e-01&7.04e-02\\ \hline 
+	1.59e-06&1.33e-01&8.74e-01&8.64e-01&8.01e-01&6.05e-01&4.18e-01&1.85e-01&7.62e-02\\ \hline 
+	2.51e-06&1.07e-01&8.81e-01&8.91e-01&8.34e-01&6.42e-01&4.51e-01&1.98e-01&8.21e-02\\ \hline 
+	3.98e-06&8.52e-02&8.90e-01&9.11e-01&8.70e-01&6.78e-01&4.80e-01&2.13e-01&8.79e-02\\ \hline 
+	6.31e-06&6.77e-02&8.88e-01&9.24e-01&8.93e-01&7.10e-01&5.03e-01&2.26e-01&9.33e-02\\ \hline 
+	1.00e-05&5.39e-02&8.69e-01&9.27e-01&9.03e-01&7.34e-01&5.25e-01&2.36e-01&9.77e-02\\ \hline 
+	1.59e-05&4.27e-02&8.53e-01&9.27e-01&9.19e-01&7.56e-01&5.49e-01&2.48e-01&1.02e-01\\ \hline 
+	2.51e-05&3.40e-02&8.29e-01&9.25e-01&9.27e-01&7.72e-01&5.67e-01&2.59e-01&1.08e-01\\ \hline 
+	3.98e-05&2.70e-02&8.06e-01&9.12e-01&9.23e-01&7.85e-01&5.81e-01&2.69e-01&1.13e-01\\ \hline 
+	6.31e-05&2.15e-02&7.78e-01&8.95e-01&9.18e-01&8.00e-01&5.97e-01&2.79e-01&1.17e-01\\ \hline 
+	1.00e-04&1.70e-02&7.48e-01&8.75e-01&9.14e-01&8.10e-01&6.14e-01&2.90e-01&1.21e-01\\ \hline 
+	1.59e-04&1.34e-02&7.24e-01&8.59e-01&9.00e-01&8.19e-01&6.25e-01&2.99e-01&1.25e-01\\ \hline 
+	2.51e-04&1.06e-02&6.95e-01&8.40e-01&8.93e-01&8.26e-01&6.36e-01&3.08e-01&1.31e-01\\ \hline 
+	3.98e-04&8.41e-03&6.61e-01&8.13e-01&8.85e-01&8.29e-01&6.52e-01&3.18e-01&1.35e-01\\ \hline 
+	6.31e-04&6.64e-03&6.33e-01&7.90e-01&8.70e-01&8.31e-01&6.63e-01&3.26e-01&1.39e-01\\ \hline 
+	1.00e-03&5.23e-03&6.08e-01&7.66e-01&8.51e-01&8.33e-01&6.73e-01&3.35e-01&1.44e-01\\ \hline 
+	1.59e-03&4.09e-03&5.78e-01&7.45e-01&8.33e-01&8.32e-01&6.79e-01&3.45e-01&1.49e-01\\ \hline 
+	2.51e-03&3.21e-03&5.49e-01&7.23e-01&8.21e-01&8.32e-01&6.85e-01&3.54e-01&1.54e-01\\ \hline 
+	3.98e-03&2.51e-03&5.24e-01&7.00e-01&8.03e-01&8.30e-01&6.97e-01&3.65e-01&1.59e-01\\ \hline 
+	6.31e-03&1.94e-03&4.99e-01&6.75e-01&7.87e-01&8.28e-01&7.03e-01&3.75e-01&1.64e-01\\ \hline 
+	1.00e-02&1.50e-03&4.71e-01&6.50e-01&7.72e-01&8.26e-01&7.11e-01&3.86e-01&1.71e-01\\ \hline 
+	1.59e-02&1.15e-03&4.46e-01&6.26e-01&7.54e-01&8.26e-01&7.25e-01&4.00e-01&1.79e-01\\ \hline 
+	2.51e-02&8.82e-04&4.24e-01&6.04e-01&7.37e-01&8.29e-01&7.38e-01&4.18e-01&1.88e-01\\ \hline 
+	3.98e-02&6.64e-04&4.01e-01&5.84e-01&7.21e-01&8.35e-01&7.59e-01&4.40e-01&2.01e-01\\ \hline 
+	6.31e-02&4.97e-04&3.75e-01&5.59e-01&7.09e-01&8.44e-01&7.84e-01&4.70e-01&2.21e-01\\ \hline 
+	1.00e-01&3.72e-04&3.47e-01&5.33e-01&6.92e-01&8.55e-01&8.20e-01&5.13e-01&2.47e-01\\ \hline 
+	1.59e-01&2.82e-04&3.16e-01&5.00e-01&6.64e-01&8.64e-01&8.65e-01&5.75e-01&2.88e-01\\ \hline 
+	2.51e-01&2.27e-04&2.77e-01&4.57e-01&6.33e-01&8.65e-01&9.10e-01&6.55e-01&3.48e-01\\ \hline 
+	3.98e-01&2.01e-04&2.31e-01&4.05e-01&5.82e-01&8.48e-01&9.39e-01&7.50e-01&4.35e-01\\ \hline 
+	6.31e-01&1.82e-04&1.84e-01&3.40e-01&5.06e-01&7.98e-01&9.43e-01&8.50e-01&5.49e-01\\ \hline 
+	1.00e+00&1.75e-04&1.40e-01&2.66e-01&4.19e-01&7.12e-01&9.11e-01&9.25e-01&6.81e-01\\ \hline 
+	1.59e+00&1.75e-04&9.76e-02&1.97e-01&3.24e-01&5.96e-01&8.12e-01&9.43e-01&8.03e-01\\ \hline 
+	2.51e+00&1.52e-04&6.36e-02&1.37e-01&2.31e-01&4.58e-01&6.68e-01&8.92e-01&8.31e-01\\ \hline 
+	3.98e+00&9.79e-05&4.07e-02&8.93e-02&1.55e-01&3.28e-01&5.08e-01&7.54e-01&7.99e-01\\ \hline 
+	6.31e+00&6.01e-05&2.42e-02&5.38e-02&9.79e-02&2.21e-01&3.63e-01&6.02e-01&7.15e-01\\ \hline 
+	1.00e+01&3.70e-05&1.40e-02&3.20e-02&5.98e-02&1.37e-01&2.37e-01&4.20e-01&5.32e-01\\ \hline 
+	1.59e+01&2.29e-05&9.21e-03&2.10e-02&3.86e-02&8.90e-02&1.58e-01&2.92e-01&3.92e-01\\ \hline 
+	\hline 
+\end{longtable}
+
+
+
+
+\end{document}
+
+
