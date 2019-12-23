@@ -1,4 +1,7 @@
 title
 response,resp.txt
+counts,ambe_count.txt
+theory,ambe_flux.txt
+end
 counts,fbtr_count2.txt
 theory,fbtr_flux.txt
