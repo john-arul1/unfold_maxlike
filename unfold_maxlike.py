@@ -2,7 +2,7 @@
 """
 Created on Tue Dec 10 12:48:00 2019
 John Arul, IGCAR, India
-Program
+Program to unfold spectrum from measured counts
 """
 
 ###main driver
