@@ -69,7 +69,12 @@ def L(x,R,a,phi):
 ## read files
 def read_data(fname):
 
-    fi=open(dict_fname[fname],"r")
+    try:
+        fi=open(fname,'r')    
+    except OSError:
+        print('cannot open', fname)
+        sys.exit(1)
+        
     fi.readline() #skip  title
     # two column or one column file
     dim_txt=fi.readline()
@@ -120,8 +125,12 @@ if narg < 2:
 
 fstr=sys.argv[1]
 
+try:
+   file_list=open(fstr,'r')
+except OSError:
+   print('cannot open', fstr)
+   sys.exit(1)
 
-file_list=open(fstr,'r')
 file_list.readline() # ignore first title line
 lines=file_list.readlines()
 
@@ -142,8 +151,14 @@ if "counts" not in  dict_fname:
     print ("Measured counts file not specified")
     sys.exit(1)
 
+    
+try:
+   f1=open(dict_fname["response"],"r")
+except OSError:
+   print('cannot open', dict_fname["response"])
+   sys.exit(1)
 
-f1=open(dict_fname["response"],"r")
+
 f1.readline() #title
 dim_txt=f1.readline()
 dim_txt=dim_txt.rstrip()
@@ -197,16 +212,14 @@ if 'guess' in dict_fname:
     flag_guess=1
 
 
-#Bn=[0.11560432,  0.71391792,  0.78444857,  0.79239306,  0.6888244 ,     0.52294259,  0.25157437,  0.10726744]
-
 '''
 tikhonov regularization
 minimize (Rx-c)+lam *x
 '''
 ###--------------------------------
-rp=0.2
+rp=0.1
 X=R.T.dot(R)
-X=X+np.identity(52)*rp
+X=X+np.identity(n)*rp
 XI=np.linalg.inv(X)
 x1=XI.dot(R.T.dot(B))
 x1s=x1
