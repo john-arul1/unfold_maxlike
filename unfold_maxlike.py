@@ -70,9 +70,9 @@ def L(x,R,a,phi):
 def read_data(fname):
 
     try:
-        fi=open(fname,'r')    
+        fi=open(dict_fname[fname],'r')    
     except OSError:
-        print('cannot open', fname)
+        print('cannot open',dict_fname[fname])
         sys.exit(1)
         
     fi.readline() #skip  title
@@ -111,7 +111,7 @@ def read_data(fname):
 # assumes  minimum 2 input files are given, response and counts
 # further files are theoretical flux, guess flux
 # there can be standard files of guess flux and theoretical flux
-# this is standard flux files have to be implemented
+# this standard flux files have to be implemented
 
 flag_theory=0
 flag_guess=0
